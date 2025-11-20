@@ -3,8 +3,11 @@
 #include "trigger_effect_manager.h"
 #include "util.h"
 #include "vr_settings.h"
+#include "sense_controller.h"
 
 #include <cstdio>
+#include <cmath>
+#include <algorithm>
 
 namespace psvr2_toolkit {
   namespace ipc {
@@ -170,6 +173,32 @@ namespace psvr2_toolkit {
           break;
         }
 
+        case ipc::Command_ClientSetHapticsGain: {
+            if (pHeader->dataLen == sizeof(ipc::CommandDataClientSetHapticsGain_t)) {
+                auto* pRequest = reinterpret_cast<ipc::CommandDataClientSetHapticsGain_t*>(pData);
+                float recvGain = pRequest->gain;
+        
+                // 限定合理范围（举例：0.0 到 10.0，根据你需要调整）
+                const float kMinGain = 0.0f;
+                const float kMaxGain = 10.0f;
+                float clampedGain = std::clamp(recvGain, kMinGain, kMaxGain);
+        
+                // 写入全局（线程安全的 atomic setter）
+                SenseController::SetGlobalHapticsGain(clampedGain);
+        
+                // 日志：如果被 clamp，记录原始值
+                if (clampedGain != recvGain) {
+                    Util::DriverLog("[IPC] Received gain %f out of range, clamped to %f", recvGain, clampedGain);
+                } else {
+                    Util::DriverLog("[IPC] Updated Haptics Gain to: %f", clampedGain);
+                }
+            } else {
+                Util::DriverLog("[IPC] Received Command_ClientSetHapticsGain with unexpected dataLen=%d (expected=%zu)",
+                                pHeader->dataLen, sizeof(ipc::CommandDataClientSetHapticsGain_t));
+            }
+            break;
+        }
+        
         case Command_ClientRequestHandshake: {
           CommandDataServerHandshakeResult_t response;
           response.result = HandshakeResult_Failed;

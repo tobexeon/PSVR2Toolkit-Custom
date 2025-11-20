@@ -18,6 +18,7 @@ namespace PSVR2Toolkit.CAPI {
         ClientTriggerEffectMultiplePositionFeedback, // CommandDataClientTriggerEffectMultiplePositionFeedback
         ClientTriggerEffectSlopeFeedback, // CommandDataClientTriggerEffectSlopeFeedback
         ClientTriggerEffectMultiplePositionVibration, // CommandDataClientTriggerEffectMultiplePositionVibration
+        ClientSetHapticsGain, // 对应 C++ 中的 Command_ClientSetHapticsGain
     };
 
     public enum EHandshakeResult : byte {
@@ -161,5 +162,10 @@ namespace PSVR2Toolkit.CAPI {
         public byte frequency;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = 10)]
         public byte[] amplitude;
+    };
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CommandDataClientSetHapticsGain {
+        public float gain;
     };
 }

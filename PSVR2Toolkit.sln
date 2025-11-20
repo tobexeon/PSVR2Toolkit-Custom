@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PSVR2Toolkit.App", "project
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcustomshare", "projects\libcustomshare\libcustomshare.vcxproj", "{EABC1D23-54F9-455F-9FB4-C0A7A01CA592}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetHapticsGain", "projects\SetHapticsGain\SetHapticsGain.csproj", "{5587B596-6005-4011-8925-123456789ABC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -81,6 +83,14 @@ Global
 		{EABC1D23-54F9-455F-9FB4-C0A7A01CA592}.Release|x64.Build.0 = Release|x64
 		{EABC1D23-54F9-455F-9FB4-C0A7A01CA592}.ReleaseCI|x64.ActiveCfg = Release|x64
 		{EABC1D23-54F9-455F-9FB4-C0A7A01CA592}.ReleaseCI|x64.Build.0 = Release|x64
+        {5587B596-6005-4011-8925-123456789ABC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.Debug|x64.Build.0 = Debug|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.DebugCI|x64.ActiveCfg = DebugCI|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.DebugCI|x64.Build.0 = DebugCI|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.Release|x64.ActiveCfg = Release|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.Release|x64.Build.0 = Release|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.ReleaseCI|x64.ActiveCfg = ReleaseCI|Any CPU
+		{5587B596-6005-4011-8925-123456789ABC}.ReleaseCI|x64.Build.0 = ReleaseCI|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

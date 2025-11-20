@@ -24,12 +24,24 @@ namespace PSVR2Toolkit.CAPI {
         private int m_gazePumpPeriodMs = 8; // 120Hz
         private CommandDataServerGazeDataResult2? m_lastGazeState = null;
 
+        // 在 IpcClient 类里新增或替换方法
+        public void SetHapticsGain(float gain) {
+            if (!m_running) return;
+        
+            // 如果你使用新的 struct 名称，请在共享定义里同步修改
+            CommandDataClientSetHapticsGain data = new CommandDataClientSetHapticsGain() {
+                gain = gain
+            };
+            SendIpcCommand(ECommandType.ClientSetHapticsGain, data);
+        }
+
         public static IpcClient Instance() {
             if ( m_pInstance == null ) {
                 m_pInstance = new IpcClient();
             }
             return m_pInstance;
         }
+        
         public bool Start() {
             if ( m_running ) {
                 return false;

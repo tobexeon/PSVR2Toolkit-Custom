@@ -27,6 +27,7 @@ namespace psvr2_toolkit {
       Command_ClientTriggerEffectMultiplePositionFeedback, // CommandDataClientTriggerEffectMultiplePositionFeedback_t
       Command_ClientTriggerEffectSlopeFeedback, // CommandDataClientTriggerEffectSlopeFeedback_t
       Command_ClientTriggerEffectMultiplePositionVibration, // CommandDataClientTriggerEffectMultiplePositionVibration_t
+      Command_ClientSetHapticsGain, // 用于设置触觉增益的命令
     };
 
     enum EHandshakeResultType : uint8_t {
@@ -185,5 +186,9 @@ namespace psvr2_toolkit {
       int32_t dataLen;
     };
 
+    // [新增] 数据包结构
+    struct CommandDataClientSetHapticsGain_t {
+       float gain; // 指数，例如 1.0 (线性), 0.5 (对数增强), 2.0 (指数抑制)
+    };
   } // ipc
 } // psvr2_toolkit

@@ -122,6 +122,8 @@ namespace psvr2_toolkit {
 
     static void Initialize();
     static void Destroy();
+    // [新增] 静态函数，供 IPC Server 调用
+    static void SetGlobalHapticsGain(float gain);
 
     void SetGeneratedHaptic(float freq, uint32_t amp, uint32_t sampleCount, bool phaseJump);
     void SetPCM(const std::vector<int8_t>& newPCMData);
@@ -238,6 +240,7 @@ namespace psvr2_toolkit {
 
     static SenseController leftController;
     static SenseController rightController;
+    static std::atomic<float> g_HapticsGain;
 
     uint32_t lastDeviceTimestamp = 0;
     uint32_t lastLoopbackTimestamp = 0;

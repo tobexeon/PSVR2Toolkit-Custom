@@ -1,0 +1,111 @@
+<Window x:Class="SetHapticsGain.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="PSVR2 Haptics Control" Width="420"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize"
+        SizeToContent="Height" 
+        Loaded="Window_Loaded">
+        
+    <Window.Resources>
+        <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#007ACC"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#005C99"/> </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#004080"/> </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#CCCCCC"/>
+                                <Setter Property="Foreground" Value="#888888"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#E0E0E0"/>
+            <Setter Property="Foreground" Value="#333333"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="15,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" BorderBrush="#D0D0D0" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#C0C0C0"/> </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#A0A0A0"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Haptics Gain Settings" FontSize="20" FontWeight="SemiBold" Foreground="#333" Margin="0,0,0,25" HorizontalAlignment="Center"/>
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,25">
+            <Grid Margin="0,0,0,8">
+                <TextBlock Text="Gain Strength:" FontWeight="Medium" FontSize="14"/>
+                <TextBlock x:Name="SliderValueText" Text="1.00" HorizontalAlignment="Right" FontWeight="Bold" FontSize="16" Foreground="#007ACC"/>
+            </Grid>
+            <Slider x:Name="GainSlider" Minimum="-1" Maximum="1" Value="0" SmallChange="0.01" LargeChange="0.1" IsSnapToTickEnabled="False" ValueChanged="GainSlider_ValueChanged" AutoToolTipPlacement="None"/>
+            <Grid Margin="0,5,0,0">
+                <TextBlock Text="0.1x" FontSize="11" Foreground="Gray" HorizontalAlignment="Left"/>
+                <TextBlock Text="1.0x" FontSize="11" Foreground="Gray" HorizontalAlignment="Center"/>
+                <TextBlock Text="10.0x" FontSize="11" Foreground="Gray" HorizontalAlignment="Right"/>
+            </Grid>
+        </StackPanel>
+
+        <Grid Grid.Row="2" Margin="0,0,0,25">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="15"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBox x:Name="InputBox" Grid.Column="0" Height="35" FontSize="14" VerticalContentAlignment="Center" Padding="5,0" TextChanged="InputBox_TextChanged">
+                <TextBox.Resources>
+                    <Style TargetType="{x:Type Border}">
+                        <Setter Property="CornerRadius" Value="4"/>
+                    </Style>
+                </TextBox.Resources>
+            </TextBox>
+            <Button x:Name="ResetBtn" Grid.Column="2" Content="Reset (1.0)" Height="35" Style="{StaticResource SecondaryButtonStyle}" Click="ResetBtn_Click"/>
+        </Grid>
+
+        <Button Grid.Row="3" x:Name="ApplyBtn" Content="Apply Gain" Margin="0,0,0,15" Style="{StaticResource PrimaryButtonStyle}" Click="ApplyBtn_Click"/>
+
+        <StatusBar Grid.Row="4" Background="Transparent" Padding="0">
+            <TextBlock x:Name="StatusText" Text="Initializing..." Foreground="Gray" HorizontalAlignment="Center" FontSize="12"/>
+        </StatusBar>
+    </Grid>
+</Window>

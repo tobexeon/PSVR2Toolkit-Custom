@@ -19,10 +19,17 @@ using namespace psvr2_toolkit;
 
 std::atomic<bool> SenseController::g_StatusLED = true;
 std::atomic<uint8_t> SenseController::g_ShouldResetLEDTrackingInTicks = 0;
+// 在文件头部初始化静态变量
+std::atomic<float> SenseController::g_HapticsGain = 1.0f;
 SenseController SenseController::leftController = SenseController(true);
 SenseController SenseController::rightController = SenseController(false);
 
 std::atomic<std::thread*> hapticsThread;
+
+// [新增] 实现设置函数
+void SenseController::SetGlobalHapticsGain(float gain) {
+    g_HapticsGain = gain;
+}
 
 void SenseController::SetGeneratedHaptic(float freq, uint32_t amp, uint32_t sampleCount, bool phaseJump) {
   std::scoped_lock<std::mutex> lock(controllerMutex);
@@ -194,11 +201,10 @@ void SenseController::SendToDevice() {
       }
     }
 
-    float gainExponent = VRSettings::GetFloat(STEAMVR_SETTINGS_HAPTICS_GAIN_EXPONENT, SETTING_HAPTICS_GAIN_EXPONENT_DEFAULT_VALUE);
-
-    if (std::abs(gainExponent - 1.0f) > 0.001f) {
+    float gain = SenseController::g_HapticsGain.load();
+    if (std::abs(gain - 1.0f) > 0.0001f) {
         for (int i = 0; i < 32; i++) {
-            buffer.hapticPCM[i] = ApplyExponentialGain(buffer.hapticPCM[i], gainExponent);
+            buffer.hapticPCM[i] = ApplyCombinedHapticsGain(buffer.hapticPCM[i], gain);
         }
     }
   
@@ -386,11 +392,14 @@ void psvr2_toolkit::StopSenseThread() {
   delete hapticsThreadCopy;
 }
 
-void SenseController::Initialize()
-{
-  DriverHostProxy::Instance()->SetEventHandler(PollNextEvent);
+// 在 Initialize 中读取一次默认配置作为初始值
+void SenseController::Initialize() {
+    // 读取初始配置
+    float defaultGain = VRSettings::GetFloat(STEAMVR_SETTINGS_HAPTICS_GAIN, SETTING_HAPTICS_GAIN_DEFAULT_VALUE);
+    g_HapticsGain = defaultGain;
 
-  StartSenseThread();
+    DriverHostProxy::Instance()->SetEventHandler(PollNextEvent);
+    StartSenseThread();
 }
 
 void SenseController::Destroy()
