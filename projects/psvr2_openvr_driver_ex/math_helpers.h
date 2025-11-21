@@ -27,7 +27,6 @@ namespace psvr2_toolkit {
             return static_cast<int8_t>(result);
     }
     
-    // 把这个放在 math_helpers 里合适的位置（替代或并存）
     static int8_t ApplyCombinedHapticsGain(int8_t sample, float gain) {
         if (gain == 1.0f || sample == 0) return sample;
     
@@ -43,22 +42,24 @@ namespace psvr2_toolkit {
             if (outInt < INT8_MIN) outInt = INT8_MIN;
             return static_cast<int8_t>(outInt);
         } else {
-            // gain > 1：先线性放大，然后应用“温和的指数曲线”，最后做软削峰
-            // 参数选择：exponent = 1.0 + (gain - 1.0) * 0.5  （这个比例可调）
+            // gain > 1：使用指数曲线 y = 1 - (1-x)^K
             float linear = s * gain;
-    
+            
+            // 归一化到[0,1]范围
             float normalized = std::abs(linear) / 127.0f;
             if (normalized > 1.0f) normalized = 1.0f;
-    
-            float exponent = 1.0f + (gain - 1.0f) * 0.5f; // 缓和增长，避免指数爆炸
-            float curved = std::pow(normalized, exponent) * 127.0f;
-    
-            // 软削峰：使用 tanh 做柔和限制（比硬截断更平滑）
-            float soft = std::tanh(curved / 127.0f) * 127.0f;
-    
-            float result = soft;
-            if (linear < 0.0f) result = -result;
-    
+            
+            // 应用指数曲线：y = 1 - (1-x)^K
+            // 在x=0处斜率为K，在x=1处斜率为0
+            float curvedNormalized = 1.0f - std::pow(1.0f - normalized, gain);
+            
+            // 反归一化并确保不超过127
+            float curved = curvedNormalized * 127.0f;
+            curved = std::min(curved, 127.0f);
+            
+            // 应用符号
+            float result = (linear < 0.0f) ? -curved : curved;
+            
             int outInt = static_cast<int>(std::round(result));
             if (outInt > INT8_MAX) outInt = INT8_MAX;
             if (outInt < INT8_MIN) outInt = INT8_MIN;
