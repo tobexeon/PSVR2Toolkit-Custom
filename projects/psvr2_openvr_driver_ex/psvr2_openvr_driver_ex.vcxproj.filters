@@ -137,6 +137,12 @@
     <ClInclude Include="hmd2_gaze.h">
       <Filter>Additions\Gaze</Filter>
     </ClInclude>
+    <ClInclude Include="eyelid_estimator.h">
+      <Filter>Additions\Gaze</Filter>
+    </ClInclude>
+    <ClInclude Include="hmd_driver_loader.h">
+      <Filter>Core\Loader</Filter>
+    </ClInclude>
     <ClInclude Include="rolling_percentile.h">
       <Filter>Utilities</Filter>
     </ClInclude>
@@ -154,15 +160,6 @@
     </ClInclude>
     <ClInclude Include="write_file_async.h">
       <Filter>Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="eyelid_estimator.h">
-      <Filter>Additions\Gaze</Filter>
-    </ClInclude>
-    <ClInclude Include="hmd_driver_loader.h">
-      <Filter>Core\Loader</Filter>
     </ClInclude>
     <ClInclude Include="config.h">
       <Filter>Core</Filter>
