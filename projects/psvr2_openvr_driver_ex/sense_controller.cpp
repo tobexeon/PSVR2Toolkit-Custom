@@ -21,6 +21,7 @@ std::atomic<bool> SenseController::g_StatusLED = true;
 std::atomic<uint8_t> SenseController::g_ShouldResetLEDTrackingInTicks = 0;
 // 在文件头部初始化静态变量
 std::atomic<float> SenseController::g_HapticsGain = 1.0f;
+std::atomic<bool> SenseController::g_EnableLowFreqOverdrive = true;
 SenseController SenseController::leftController = SenseController(true);
 SenseController SenseController::rightController = SenseController(false);
 
@@ -180,12 +181,19 @@ void SenseController::SendToDevice() {
       // Basically, this makes a square wave from the cosine wave. Lower frequencies will have a higher overdrive.
       // We also overdrive for frequencies above 500 Hz.
 
-      double overdrive = 25.0;
+      // [修改] 默认为 1.0 (标准正弦波，无过载)
+      double overdrive = 1.0; 
 
-      // Make sure we don't divide by zero
-      if (this->hapticFreq != 0.0)
+      // [修改] 只有当开关开启时，才应用增强算法
+      if (g_EnableLowFreqOverdrive.load()) 
       {
-        overdrive = Clamp(1000.0 / this->hapticFreq, 10.0 + 1.0, 35.0) - 10.0 + (this->hapticFreq - 500.0);
+          overdrive = 25.0; // 基础过载值
+
+          // Make sure we don't divide by zero
+          if (this->hapticFreq != 0.0)
+          {
+            overdrive = Clamp(1000.0 / this->hapticFreq, 10.0 + 1.0, 35.0) - 10.0 + (this->hapticFreq - 500.0);
+          }
       }
 
       // In addition to copying the PCM data, we also want to add the generated haptic data to the buffer.
@@ -405,6 +413,9 @@ void SenseController::Initialize() {
     // 读取初始配置
     float defaultGain = VRSettings::GetFloat(STEAMVR_SETTINGS_HAPTICS_GAIN, SETTING_HAPTICS_GAIN_DEFAULT_VALUE);
     g_HapticsGain = defaultGain;
+
+    // [新增] 读取低频增益开关配置
+    g_EnableLowFreqOverdrive = VRSettings::GetBool(STEAMVR_SETTINGS_HAPTICS_LOW_FREQ_OVERDRIVE, SETTING_HAPTICS_LOW_FREQ_OVERDRIVE_DEFAULT_VALUE);
 
     DriverHostProxy::Instance()->SetEventHandler(PollNextEvent);
     StartSenseThread();

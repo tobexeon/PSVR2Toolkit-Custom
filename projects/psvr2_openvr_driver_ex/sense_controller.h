@@ -269,6 +269,7 @@ namespace psvr2_toolkit {
     static SenseController leftController;
     static SenseController rightController;
     static std::atomic<float> g_HapticsGain;
+    static std::atomic<bool> g_EnableLowFreqOverdrive;
 
     uint32_t lastDeviceTimestamp = 0;
     uint32_t lastLoopbackTimestamp = 0;
