@@ -6,6 +6,12 @@
 #include <cmath>
 #include <set>
 #include <stdexcept>
+#include <array>
+#include <vector>
+#include <mutex>    // for std::once_flag / std::call_once
+#include <atomic>
+#include <algorithm>
+
 
 #include <openvr_driver.h>
 
@@ -27,44 +33,81 @@ namespace psvr2_toolkit {
             return static_cast<int8_t>(result);
     }
     
-    static int8_t ApplyCombinedHapticsGain(int8_t sample, float gain) {
+    static constexpr int GAIN_LUT_STEPS = 100;     // 可按需调整
+    static constexpr float GAIN_MIN = 0.1f;
+    static constexpr float GAIN_MAX = 10.0f;
+    
+    class GainLUT
+    {
+    public:
+        static const int8_t* Get(float gain)
+        {
+            Init();
+    
+            // clamp gain range
+            if (gain < GAIN_MIN) gain = GAIN_MIN;
+            if (gain > GAIN_MAX) gain = GAIN_MAX;
+    
+            int idx = static_cast<int>(((gain - GAIN_MIN) / (GAIN_MAX - GAIN_MIN)) * (GAIN_LUT_STEPS - 1) + 0.5f);
+            return tables[idx].data();
+        }
+    
+    private:
+        static void Init()
+        {
+            static std::once_flag once;
+            std::call_once(once, []()
+            {
+                tables.resize(GAIN_LUT_STEPS);
+    
+                for (int g = 0; g < GAIN_LUT_STEPS; ++g)
+                {
+                    float gain = GAIN_MIN + (GAIN_MAX - GAIN_MIN) * (float(g) / (GAIN_LUT_STEPS - 1));
+    
+                    for (int s = 0; s < 128; ++s)
+                    {
+                        // 保持与原实现完全一致的数学步骤：
+                        // 先把样本乘 gain（linear），再归一化到 [0,1]，然后根据 gain 决定是否使用指数曲线，最后 *127 并 round
+                        float sample = static_cast<float>(s); // 绝对值输入 0..127
+    
+                        float linear = sample * gain;
+                        float normalized = linear / 127.0f;
+                        if (normalized < 0.0f) normalized = 0.0f;
+                        if (normalized > 1.0f) normalized = 1.0f;
+    
+                        float curvedNormalized;
+                        if (gain <= 1.0f)
+                        {
+                            curvedNormalized = normalized * gain; // 对应原代码在 gain<=1 的行为
+                        }
+                        else
+                        {
+                            curvedNormalized = 1.0f - std::pow(1.0f - normalized, gain);
+                        }
+    
+                        float curved = curvedNormalized * 127.0f;
+                        if (curved > 127.0f) curved = 127.0f;
+    
+                        tables[g][s] = static_cast<int8_t>(std::round(curved)); // round 保持语义一致
+                    }
+                }
+            });
+        }
+    
+        static inline std::vector<std::array<int8_t, 128>> tables;
+    };
+    
+    static inline int8_t ApplyCombinedHapticsGain(int8_t sample, float gain)
+    {
         if (gain == 1.0f || sample == 0) return sample;
     
-        // 把原始样本转换为 float，范围 -127..127
-        float s = static_cast<float>(sample);
+        const int8_t* lut = GainLUT::Get(gain);
     
-        if (gain < 1.0f) {
-            // 线性减少（简单直接）
-            float out = s * gain;
-            // 四舍五入并 clamp
-            int outInt = static_cast<int>(std::round(out));
-            if (outInt > INT8_MAX) outInt = INT8_MAX;
-            if (outInt < INT8_MIN) outInt = INT8_MIN;
-            return static_cast<int8_t>(outInt);
-        } else {
-            // gain > 1：使用指数曲线 y = 1 - (1-x)^K
-            float linear = s * gain;
-            
-            // 归一化到[0,1]范围
-            float normalized = std::abs(linear) / 127.0f;
-            if (normalized > 1.0f) normalized = 1.0f;
-            
-            // 应用指数曲线：y = 1 - (1-x)^K
-            // 在x=0处斜率为K，在x=1处斜率为0
-            float curvedNormalized = 1.0f - std::pow(1.0f - normalized, gain);
-            
-            // 反归一化并确保不超过127
-            float curved = curvedNormalized * 127.0f;
-            curved = std::min(curved, 127.0f);
-            
-            // 应用符号
-            float result = (linear < 0.0f) ? -curved : curved;
-            
-            int outInt = static_cast<int>(std::round(result));
-            if (outInt > INT8_MAX) outInt = INT8_MAX;
-            if (outInt < INT8_MIN) outInt = INT8_MIN;
-            return static_cast<int8_t>(outInt);
-        }
+        int absS = std::abs(sample);
+        if (absS > 127) absS = 127;
+    
+        int8_t out = lut[absS];
+        return (sample < 0) ? -out : out;
     }
 
     static int8_t CosineToByte(uint32_t position, double max, double amp, double overdrive)
