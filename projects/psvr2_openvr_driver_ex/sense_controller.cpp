@@ -35,6 +35,16 @@ void SenseController::SetGlobalHapticsGain(float gain) {
 void SenseController::SetGeneratedHaptic(float freq, uint32_t amp, uint32_t sampleCount, bool phaseJump) {
   std::scoped_lock<std::mutex> lock(controllerMutex);
 
+  // [新增] 50ms 防抖逻辑
+  if (phaseJump) {
+      uint64_t now = GetHostTimestamp();
+      // 50,000 微秒 = 50 毫秒
+      if (now - this->lastTransientTimestamp < 50000) { 
+          return; // 忽略这次震动请求
+      }
+      this->lastTransientTimestamp = now;
+  }
+
   this->hapticFreq = freq;
   this->hapticAmp = amp;
   this->phaseJump = phaseJump;
@@ -161,20 +171,20 @@ void SenseController::SendToDevice() {
       if (this->phaseJump)
       {
         this->phaseJump = false;
-        hapticPosition = hapticPosition > k_unSenseHalfSamplePosition ? 0 : k_unSenseHalfSamplePosition;
+        
+        // --- 开始你的高频震动生成 ---
+        int8_t amp = static_cast<int8_t>(k_unSenseMaxHapticAmplitude);
+        const int samplesPerHalfCycle = 8; // 500Hz
+        const int durationSamples = 32;    // 10ms
 
-        bool isStartingAtUp = hapticPosition == 0;
-
-        int8_t amp = static_cast<int8_t>(std::min(this->hapticAmp, static_cast<uint32_t>(k_unSenseMaxHapticAmplitude)));
-
-        for (int i = 0; i < 6; i++)
-          buffer.hapticPCM[i] = ClampedAdd(buffer.hapticPCM[i], isStartingAtUp ? amp : -amp);
-
-        for (int i = 6; i < 12; i++)
-          buffer.hapticPCM[i] = ClampedAdd(buffer.hapticPCM[i], isStartingAtUp ? -amp : amp);
-
-        // Back up a bit that so the actuator can move down in 6 samples, then all the way up.
-        hapticPosition -= 6;
+        for (int i = 0; i < durationSamples && i < 32; i++)
+        {
+            bool isPositivePhase = (i / samplesPerHalfCycle) % 2 == 0;
+            int8_t pulseValue = isPositivePhase ? amp : -amp;
+            buffer.hapticPCM[i] = ClampedAdd(buffer.hapticPCM[i], pulseValue);
+        }
+        
+        hapticPosition = 0; 
       }
 
       // Calculate the haptic overdrive based on frequency. We want overdrive to range from 25.0 to 1.0.
@@ -364,7 +374,7 @@ static void PollNextEvent(vr::VREvent_t* pEvent)
     if (hapticEvent.fAmplitude != 0.0f)
     {
       senseHapticAmp = static_cast<uint8_t>(sqrtf(hapticEvent.fAmplitude) * k_unSenseMaxHapticAmplitude);
-      senseHapticSamplesLeft = phaseJump ? 96 : 16 + static_cast<uint32_t>(hapticEvent.fDurationSeconds * k_unSenseSampleRate);
+      senseHapticSamplesLeft = phaseJump ? 0 : 16 + static_cast<uint32_t>(hapticEvent.fDurationSeconds * k_unSenseSampleRate);
     }
 
     SenseController* controller = nullptr;

@@ -281,6 +281,7 @@ namespace psvr2_toolkit {
     uint32_t hapticAmp = 0;
     float hapticFreq = 0.0f;
     bool phaseJump = true;
+    uint64_t lastTransientTimestamp = 0;
 
     std::vector<int8_t> pcmData;
     size_t samplesRead = 0;
