@@ -2,7 +2,6 @@
 
 #include "math_helpers.h"
 #include "libpad_hooks.h"
-#include "rolling_percentile.h"
 #include "write_file_async.h"
 
 #include <atomic>
@@ -122,7 +121,8 @@ namespace psvr2_toolkit {
 
     static void Initialize();
     static void Destroy();
-    // [新增] 静态函数，供 IPC Server 调用
+    
+    // [Custom] 静态函数，供 IPC Server 调用
     static void SetGlobalHapticsGain(float gain);
 
     void SetGeneratedHaptic(float freq, uint32_t amp, uint32_t sampleCount, bool phaseJump);
@@ -268,6 +268,8 @@ namespace psvr2_toolkit {
 
     static SenseController leftController;
     static SenseController rightController;
+    
+    // [Custom] 增益控制变量
     static std::atomic<float> g_HapticsGain;
     static std::atomic<bool> g_EnableLowFreqOverdrive;
 
@@ -280,7 +282,11 @@ namespace psvr2_toolkit {
     uint32_t hapticSamplesLeft = 0;
     uint32_t hapticAmp = 0;
     float hapticFreq = 0.0f;
-    bool phaseJump = true;
+    
+    // [Standard] 保持 bool 类型，因为你不需要多包发送逻辑
+    bool phaseJump = true; 
+    
+    // [Custom] 防抖时间戳 (50ms Logic)
     uint64_t lastTransientTimestamp = 0;
 
     std::vector<int8_t> pcmData;
@@ -290,5 +296,3 @@ namespace psvr2_toolkit {
   void StartSenseThread();
   void StopSenseThread();
 }
-
-
