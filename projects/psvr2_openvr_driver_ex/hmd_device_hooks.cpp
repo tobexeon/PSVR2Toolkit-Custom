@@ -139,8 +139,8 @@ namespace psvr2_toolkit {
         // 应用校准文件中的偏移量
         // 注意：这里的正负号可能需要根据实际体验调整
         // 假设校准程序输出的是“注视点需要移动多少才能对准”，那么这里应该是 +
-        rawX -= g_calibOffsetX;
-        rawY -= g_calibOffsetY;
+        rawX += g_calibOffsetX;
+        rawY += g_calibOffsetY;
         
         // 重新归一化向量，保证数据有效性
         float length = std::sqrt(rawX * rawX + rawY * rawY + rawZ * rawZ);
