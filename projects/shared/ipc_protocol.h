@@ -28,6 +28,8 @@ namespace psvr2_toolkit {
       Command_ClientTriggerEffectSlopeFeedback, // CommandDataClientTriggerEffectSlopeFeedback_t
       Command_ClientTriggerEffectMultiplePositionVibration, // CommandDataClientTriggerEffectMultiplePositionVibration_t
       Command_ClientSetHapticsGain, // 用于设置触觉增益的命令
+      Command_ClientStartGazeCalibration, // 通知驱动：我要开始校准了，请暂时禁用修正
+      Command_ClientStopGazeCalibration,  // 通知驱动：校准完了，请重新读取文件并应用修正
     };
 
     enum EHandshakeResultType : uint8_t {

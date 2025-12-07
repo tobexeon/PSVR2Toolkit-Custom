@@ -4,6 +4,7 @@
 #include "util.h"
 #include "vr_settings.h"
 #include "sense_controller.h"
+#include "hmd_device_hooks.h" // [新增] 引入头文件
 
 #include <cstdio>
 #include <cmath>
@@ -196,6 +197,20 @@ namespace psvr2_toolkit {
                 Util::DriverLog("[IPC] Received Command_ClientSetHapticsGain with unexpected dataLen=%d (expected=%zu)",
                                 pHeader->dataLen, sizeof(ipc::CommandDataClientSetHapticsGain_t));
             }
+            break;
+        }
+
+        // [新增] 处理校准开始指令
+        case ipc::Command_ClientStartGazeCalibration: {
+            Util::DriverLog("[IPC] Received StartCalibration command. Disabling correction.");
+            HmdDeviceHooks::EnableCalibration(false); // 暂时禁用校准，输出原始数据
+            break;
+        }
+
+        // [新增] 处理校准结束指令
+        case ipc::Command_ClientStopGazeCalibration: {
+            Util::DriverLog("[IPC] Received StopCalibration command. Reloading config.");
+            HmdDeviceHooks::ReloadCalibration(); // 重新读取文件并启用校准
             break;
         }
         
