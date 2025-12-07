@@ -12,9 +12,10 @@
 #include "util.h"
 
 #include <cstdint>
-#include <fstream>  // [新增]
-#include <vector>   // [新增]
-#include <cmath>    // [新增]
+// [新增] 头文件
+#include <fstream>
+#include <vector>
+#include <cmath>
 
 namespace psvr2_toolkit {
 
@@ -39,8 +40,6 @@ namespace psvr2_toolkit {
           Util::DriverLog("[Gaze Calibration] No calibration file found at %s. Using raw data.", path.c_str());
       }
   }
-
-namespace psvr2_toolkit {
 
 #ifdef OPENVR_EXTENSIONS_AVAILABLE
   void* g_pOpenVRExHandle = nullptr;
@@ -131,19 +130,19 @@ namespace psvr2_toolkit {
     auto& origin = pGazeState->combined.gazeOriginMm;
     auto& direction = pGazeState->combined.gazeDirNorm;
 
+    // --- [修改] 校准逻辑开始 ---
     float rawX = direction.x;
     float rawY = direction.y;
     float rawZ = direction.z;
 
     if (g_hasCalibrated) {
-        // 应用偏移 (注意：这里需要根据实际测试调整正负号)
-        // 根据你的校准程序逻辑：Target = Raw + Offset
-        // 在前端计算时，TargetX = 0, RawX = -0.01 -> Offset = 0.01
-        // 所以 Corrected = Raw + Offset 是合理的
+        // 应用校准文件中的偏移量
+        // 注意：这里的正负号可能需要根据实际体验调整
+        // 假设校准程序输出的是“注视点需要移动多少才能对准”，那么这里应该是 +
         rawX += g_calibOffsetX;
         rawY += g_calibOffsetY;
         
-        // 由于加上偏移后向量长度变了，必须重新归一化(Normalize)，否则 SteamVR 可能会报错或表现怪异
+        // 重新归一化向量，保证数据有效性
         float length = std::sqrt(rawX * rawX + rawY * rawY + rawZ * rawZ);
         if (length > 0.0001f) {
             rawX /= length;
@@ -151,8 +150,10 @@ namespace psvr2_toolkit {
             rawZ /= length;
         }
     }
+    // --- [修改] 校准逻辑结束 ---
 
     eyeTrackingData.vGazeOrigin = vr::HmdVector3_t{ -origin.x / 1000.0f, origin.y / 1000.0f, -origin.z / 1000.0f };
+    // 使用校准后的 rawX, rawY, rawZ
     eyeTrackingData.vGazeTarget = vr::HmdVector3_t{ -rawX, rawY, -rawZ };
 
     int64_t hmdToHostOffset;
@@ -171,8 +172,8 @@ namespace psvr2_toolkit {
   }
 
   void HmdDeviceHooks::InstallHooks() {
-    // [新增] 驱动加载时读取一次校准文件
-    LoadCalibrationData(); 
+    // [新增] 在安装钩子（即驱动初始化阶段）读取校准数据
+    LoadCalibrationData();
 
     static HmdDriverLoader* pHmdDriverLoader = HmdDriverLoader::Instance();
 
