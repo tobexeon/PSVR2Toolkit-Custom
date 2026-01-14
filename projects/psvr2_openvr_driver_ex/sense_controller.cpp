@@ -427,7 +427,7 @@ void SenseController::Initialize() {
     // [新增] 读取低频增益开关配置
     g_EnableLowFreqOverdrive = VRSettings::GetBool(STEAMVR_SETTINGS_HAPTICS_LOW_FREQ_OVERDRIVE, SETTING_HAPTICS_LOW_FREQ_OVERDRIVE_DEFAULT_VALUE);
 
-    DriverHostProxy::Instance()->SetEventHandler(PollNextEvent);
+    DriverHostProxy::Instance()->AddEventHandler(PollNextEvent);
     StartSenseThread();
 }
 
